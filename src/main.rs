@@ -1,7 +1,8 @@
-use blake2::{Blake2b, Digest};
+use crc32fast::Hasher;
+use chrono::Utc;
 
 // convert decimal numerals to base-62
-fn generate(num: &mut u64) -> String {
+fn generate(num: &mut u128) -> String {
     let mut unique_name: String = Default::default();
     let mut temp_remainder: u8;
     let mut temp_numeral: u8;
@@ -25,28 +26,26 @@ fn generate(num: &mut u64) -> String {
     unique_name
 }
 
-fn testing() {
-    let mut num: u64;
-    let result: String;
+// call generate with required info to create unique name
+fn get_id(ip_address: String, index: u16) -> String {
+    let dt = Utc::now();
 
-    let ip_address = "192.168.213.213";
-
-    let mut hasher = Blake2b::new();
+    let mut hasher = Hasher::new();
     hasher.update(ip_address.as_bytes());
-    let hash_result = hasher.finalize();
+    let ip_checksum = hasher.finalize();
 
-    let truncated_hash_hex = hash_result[..4]
-        .iter()
-        .map(|byte| format!("{:02x}", byte))
-        .collect::<String>();
+    let mut num: u128 = format!("{}{}{}", index, dt.timestamp_micros(), ip_checksum)
+        .parse()
+        .unwrap();
 
-    num = 3112999923595959999;
-    result = generate(&mut num);
-    println!("filename: {truncated_hash_hex}{result}");
+    generate(&mut num)
 }
 
+// test with random data
 fn main() {
-    testing();
+    for i in 90..110 {
+        let result = get_id("192.168.001.231".to_string(), i);
+        println!("{}", result);
+    }
 }
-
 
