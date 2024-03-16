@@ -1,6 +1,7 @@
+use blake2::{Blake2b, Digest};
 
 // convert decimal numerals to base-62
-fn generate(num: &mut u128) -> String {
+fn generate(num: &mut u64) -> String {
     let mut unique_name: String = Default::default();
     let mut temp_remainder: u8;
     let mut temp_numeral: u8;
@@ -25,19 +26,27 @@ fn generate(num: &mut u128) -> String {
 }
 
 fn testing() {
-    let mut num: u128;
-    let mut result: String;
+    let mut num: u64;
+    let result: String;
 
-    num = u128::MAX;
-    result = generate(&mut num);
-    println!("filename: {result}");
+    let ip_address = "192.168.213.213";
 
-    num = 2552552552553112999923595959999;
+    let mut hasher = Blake2b::new();
+    hasher.update(ip_address.as_bytes());
+    let hash_result = hasher.finalize();
+
+    let truncated_hash_hex = hash_result[..4]
+        .iter()
+        .map(|byte| format!("{:02x}", byte))
+        .collect::<String>();
+
+    num = 3112999923595959999;
     result = generate(&mut num);
-    println!("filename: {result}");
+    println!("filename: {truncated_hash_hex}{result}");
 }
 
 fn main() {
     testing();
 }
+
 
